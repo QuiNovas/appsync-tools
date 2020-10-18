@@ -81,11 +81,9 @@ def prettyParseDynamo(items, type_attribute=None):
 
 def typify(res, type_attribute="type"):
     if isinstance(res, list):
-        items = []
         for item in res:
             if item.get(type_attribute):
                 item["__typename"] = item[type_attribute]
-        res = items
     elif isinstance(res, dict):
         if res.get(type_attribute):
             res["__typename"] = res[type_attribute]
