@@ -56,7 +56,7 @@ def prettyParseDynamo(items, type_attribute=None):
         'L': parseList,
         'B': lambda x: x,
         'BS': parseList,
-        'BOOL': lambda x: x == 'true',
+        'BOOL': lambda x: x,
         'NS': parseList,
         'NULL': lambda x: None,
         'SS': list,
