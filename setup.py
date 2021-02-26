@@ -5,8 +5,8 @@ from setuptools import setup
 
 setup(
     name='appsync-tools',
-    version='1.0.5',
-    description='Tools for handling appsync responses.',
+    version='2.0.1',
+    description='Tools for handling appsync responses and routes.',
     author='Mathew Moon',
     author_email='mmoon@quinovas.com',
     url='https://github.com/QuiNovas/appsync-tools',
