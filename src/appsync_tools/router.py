@@ -1,25 +1,24 @@
 #!/usr/bin/env python3.8
 from typing import Any, Callable, Union
+from typeguard import typechecked
 from .exceptions import NonExistentRouteException
 
 
 class Router:
     def __init__(self):
         self.routes = {}
-        self._default_route = None
 
-    @property
-    def default_route(self) -> Union[Callable[[dict], Any], None]:
-        return self._default_root
-
-    @default_route.setter
+    @typechecked
     def default_route(self, func: Callable[[dict], Any]) -> Callable[[dict], Any]:
         """
-        When set will match any route passed to handle_route that has no function
-        attached
+        Sets the default route
+        Return value:
+        returns a function that must accept a dict as its sole argument
         """
-        self._default_route = func
+        self.routes["default"] = func
+        return func
 
+    @typechecked
     def route(self, route: Union[str, list]) -> Callable[[dict], Any]:
         """
         Accept a route and return a decorated function after passing that function
@@ -31,7 +30,9 @@ class Router:
         Return value:
         returns a function that must accept a dict as its sole argument
         """
-        def return_func(func: Callable[[dict], Any]) -> Callable[[dict], Any]:
+
+        @typechecked
+        def inner(func: Callable[[dict], Any]) -> Callable[[dict], Any]:
             """
             Accepts a function that accepts a dict as its sole argument, adds the
             function to the current class object's map of routes to functions,
@@ -42,9 +43,11 @@ class Router:
                     self.routes[r] = func
             else:
                 self.routes[route] = func
-            return func
-        return return_func
 
+            return func
+        return inner
+
+    @typechecked
     def handle_route(self, event: dict) -> Any:
         """
         Looks up the route for a call based on the parentType and field in event["info"]
@@ -57,8 +60,8 @@ class Router:
         route = f"{field}.{subfield}"
         if route in self.routes:
             handler = self.routes[route]
-        elif self._default_route is not None:
-            handler = self._default_route
+        elif self.routes.get("default") is not None:
+            handler = self.routes["default"]
         else:
             raise NonExistentRouteException(f"Route {route} does not exist")
 

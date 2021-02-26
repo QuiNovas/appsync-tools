@@ -76,9 +76,10 @@ Adding __typename to all records based on an attribute
 
 typify(records, type_attribute="type") -> list | dict
 **Arguments:**
-records -- The Item(s) from a call to query, get_item
+- records -- The Item(s) from a call to query, get_item
+
 **Keyword Args:**
-type_attribute -- Attribute name that contains the __typename value
+- type_attribute -- Attribute name that contains the __typename value
 
 Example
 ----------------------------
@@ -95,14 +96,15 @@ Example
 ```
 
 
-# Appsync resolver function routing
+## Appsync resolver function routing
+### Creating a route
 appsync_tools.router is an instance of appsync_tools.router.Router. The router object can be used to specify that a function is used for a
 specific Appsync type by decoration the function with the router.route() method. The decorated function should accept the Lambda event as
 its only argument.
 
-router.route(route: str|list) -> function
-**keyword Args:
-route -- The route(s) that this function applies to. "route" is expressed as <parent type>.<type>. For example, using this schema:
+**router.route(route: str|list) -> function**
+**keyword Args:**
+- route -- The route(s) that this function applies to. "route" is expressed as <parent type>.<type>. For example, using this schema:
 
 ```
 type Foo {
@@ -119,25 +121,60 @@ the route passed to the decorator to handle GetFoo would be "Query.GetFoo". rout
 Example
 ----------------------------
 ```python
-from appsync_tools import router
+  from appsync_tools import router
 
 
-def handler(event, _):
-  router.handle_route(event)
+  def handler(event, _):
+    router.handle_route(event)
 
 
-@router.route(route="Query.GetFoo)
-def get_foo(event):
-  print(event)
+  @router.route(route="Query.GetFoo)
+  def get_foo(event):
+    print(event)
 
 
-event = {
-  "arguments": {"my_var": "something"}
-}
+  event = {
+    "arguments": {"my_var": "something"}
+  }
 
 
-handler(event, None)
+  handler(event, None)
 
-# Will print: '{"arguments": {"my_var": "something"}}'
+  # Will print: '{"arguments": {"my_var": "something"}}'
 
+```
+
+### Creating a default route
+Decorating a function with **@default_route** will make it the default function to call if there are no matching routes. It takes no direct arguments
+
+Example
+----------------------------
+```python
+  from appsync_tools import router
+
+
+  def handler(event, _):
+      router.handle_route(event)
+
+
+  @router.route(route="Query.GetFoo")
+  def get_foo(event):
+      print("bar")
+
+
+  @router.default_route
+  def default(event):
+      print("hey, I'm the default route")
+
+
+  event = {
+      "info": {
+          "parentType": "No",
+          "field": "Route",
+      }
+  }
+
+  handler(event)
+
+  # Will print: "hey, I'm the default route"
 ```
