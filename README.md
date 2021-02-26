@@ -1,7 +1,9 @@
 # appsync-tools
 
-Parses aurora and dynamodb responses into a more usable format.
+##Provides helpful tools for parsing database responses and handling routes inside of Lambda for AWS Appsync.
 
+
+## DB response parsing
 Aurora results are returned as a list of dictionaries with the column names being the key.
 Nulls (returned by Aurora as isNull) are returned as None types. Any value that can be parsed as json is cast from a string to a list/dictionary.
 Responses are returned formated as:
@@ -90,4 +92,52 @@ Example
   )
 
   print(typify(response.get("Item"), type_attribute="sk"))
+```
+
+
+# Appsync resolver function routing
+appsync_tools.router is an instance of appsync_tools.router.Router. The router object can be used to specify that a function is used for a
+specific Appsync type by decoration the function with the router.route() method. The decorated function should accept the Lambda event as
+its only argument.
+
+router.route(route: str|list) -> function
+**keyword Args:
+route -- The route(s) that this function applies to. "route" is expressed as <parent type>.<type>. For example, using this schema:
+
+```
+type Foo {
+  bar: str!
+}
+
+Query {
+  GetFoo: Foo
+}
+```
+
+the route passed to the decorator to handle GetFoo would be "Query.GetFoo". route can be either a single route or a list of routes.
+
+Example
+----------------------------
+```python
+from appsync_tools import router
+
+
+def handler(event, _):
+  router.handle_route(event)
+
+
+@router.route(route="Query.GetFoo)
+def get_foo(event):
+  print(event)
+
+
+event = {
+  "arguments": {"my_var": "something"}
+}
+
+
+handler(event, None)
+
+# Will print: '{"arguments": {"my_var": "something"}}'
+
 ```
