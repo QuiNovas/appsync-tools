@@ -102,7 +102,7 @@ appsync_tools.router is an instance of appsync_tools.router.Router. The router o
 specific Appsync type by decoration the function with the router.route() method. The decorated function should accept the Lambda event as
 its only argument.
 
-**router.route(route: str|list) -> function**
+**@router.route(route: str|list[str]|re.Pattern) -> function**
 **keyword Args:**
 - route -- The route(s) that this function applies to. "route" is expressed as <parent type>.<type>. For example, using this schema:
 
@@ -130,19 +130,91 @@ Example
 
   @router.route(route="Query.GetFoo)
   def get_foo(event):
-    print(event)
+    print("Foo")
 
 
   event = {
-    "arguments": {"my_var": "something"}
+    "info": {"parentType": "Query", "field": "GetFoo"}
   }
 
 
   handler(event, None)
 
-  # Will print: '{"arguments": {"my_var": "something"}}'
+  # Will print: 'Foo'
 
 ```
+
+### Regular expression matching
+You can provide regular expression matching for routes using the matched_route decorator. **router.matched_routes** are looked up after checking for an explicit match
+in **router.routes**. If not explicit matches exist then the Appsync call is tested against each expression in **router.matched_routes** until either a match is made
+or the end is reached. In the case of a match being found it is the first match in **router.matched_routes** that is used. The expression passed as **regex** can be either
+of type str(), which router will attept to compile into a Pattern, or a Pattern of type re.Pattern that has already been compiled using re.compile.
+
+**@router.matched_route(regex: str|re.Pattern) -> function**
+**keyword Args:**
+- regex: Either a string that can be compiled into a regex using re.Compile or an instance of re.Pattern that has already been compiled.
+
+Example
+----------------------------
+```python
+  from appsync_tools import router
+
+
+  def handler(event, _):
+    router.handle_route(event)
+
+
+  @router.matched_route(regex="^Query\.Search.*")
+  def search_foo(event):
+    print("Matched!!!!!)
+
+
+  event = {
+    "info": {"parentType": "Query", "field": "SearchFoo"}
+  }
+
+
+  handler(event, None)
+
+  # Will print: 'Matched!!!!!'
+
+```
+
+### Glob style matching
+The **router.globbed_route** decorator provides Unix file glob style matchinf for routes. **router.globbed_routes** are looked up after checking for an explicit match
+in **router.routes**, and a regex match in **router.matched_routes**. The Appsync call is tested against each expression in **router.globbed_routes** using fnmatch.filter
+until either a match is made or the end is reached. In the case of a match being found it is the first match in **router.globbed_routes** that is used.
+
+**@router.globbed_route(glob: str) -> function**
+**keyword Args:**
+- glob: Either a string that can be compiled into a regex using re.Compile or an instance of re.Pattern that has already been compiled.
+
+Example
+----------------------------
+```python
+  from appsync_tools import router
+
+
+  def handler(event, _):
+    router.handle_route(event)
+
+
+  @globbed.matched_route(regex="*.Search")
+  def search_foo(event):
+    print("Globbed!!!!!)
+
+
+  event = {
+    "info": {"parentType": "Query", "field": "SearchFoo"}
+  }
+
+
+  handler(event, None)
+
+  # Will print: 'Globbed!!!!!'
+
+```
+
 
 ### Creating a default route
 Decorating a function with **@default_route** will make it the default function to call if there are no matching routes. It takes no direct arguments
@@ -178,3 +250,11 @@ Example
 
   # Will print: "hey, I'm the default route"
 ```
+
+### Routes are resolved in the order of:
+- Routes explicitely defined using router.route
+- Routes matched using router.matched_route
+- Routes matched using router.globbed_route
+- Default route
+
+**If no matching route is found then appsync_tools.exceptions.NonExistentRouteException will be raised**
