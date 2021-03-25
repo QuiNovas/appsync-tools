@@ -1,9 +1,6 @@
 from decimal import Decimal
 from json import loads
 from json.decoder import JSONDecodeError
-from .router import Router
-
-router = Router()
 
 
 def _formatAuroraRecord(record, meta):
