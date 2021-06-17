@@ -28,7 +28,7 @@ def prettyParseAurora(results, type_attribute=None):
 
 
 def prettyParseDynamo(items, type_attribute=None):
-    items = items.get('Items') or items.get('Item')
+    items = items.get('Items') or items.get('Item') or []
 
     if isinstance(items, dict):
         is_single = True
